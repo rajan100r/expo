@@ -44,6 +44,12 @@ function getBundleEncoding(encoding: string | undefined): OutputOptions['bundleE
     : undefined;
 }
 
+function ensurePathIsAbsolute(filePath?: string) {
+  // Note, we intentionally use the `process.cwd()` directory instead of project root.
+  // Relative paths here should point to the directory relative to the current working directory.
+  return filePath && !path.isAbsolute(filePath) ? path.resolve(process.cwd(), filePath) : filePath;
+}
+
 export function resolveOptions(
   projectRoot: string,
   args: arg.Result<arg.Spec>,
@@ -57,11 +63,13 @@ export function resolveOptions(
     throw new CommandError(`Missing required argument: --platform`);
   }
 
-  const bundleOutput = args['--bundle-output'];
+  const bundleOutput = ensurePathIsAbsolute(args['--bundle-output']);
 
   const commonOptions = {
-    entryFile: args['--entry-file'] ?? resolveEntryPoint(projectRoot, { platform }),
-    assetCatalogDest: args['--asset-catalog-dest'],
+    entryFile: args['--entry-file']
+      ? ensurePathIsAbsolute(args['--entry-file'])
+      : resolveEntryPoint(projectRoot, { platform }),
+    assetCatalogDest: ensurePathIsAbsolute(args['--asset-catalog-dest']),
     platform,
     transformer: args['--transformer'],
     // TODO: Support `--dev false`
@@ -69,10 +77,10 @@ export function resolveOptions(
     bundleOutput,
     bundleEncoding: getBundleEncoding(args['--bundle-encoding']) ?? 'utf8',
     maxWorkers: args['--max-workers'],
-    sourcemapOutput: args['--sourcemap-output'],
-    sourcemapSourcesRoot: args['--sourcemap-sources-root'],
+    sourcemapOutput: ensurePathIsAbsolute(args['--sourcemap-output']),
+    sourcemapSourcesRoot: ensurePathIsAbsolute(args['--sourcemap-sources-root']),
     sourcemapUseAbsolutePath: !!parsed.args['--sourcemap-use-absolute-path'],
-    assetsDest: args['--assets-dest'],
+    assetsDest: ensurePathIsAbsolute(args['--assets-dest']),
     unstableTransformProfile: args['--unstable-transform-profile'],
     resetCache: !!parsed.args['--reset-cache'],
     verbose: args['--verbose'] ?? env.EXPO_DEBUG,
