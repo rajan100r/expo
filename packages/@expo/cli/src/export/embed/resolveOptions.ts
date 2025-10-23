@@ -66,9 +66,8 @@ export function resolveOptions(
   const bundleOutput = ensurePathIsAbsolute(args['--bundle-output']);
 
   const commonOptions = {
-    entryFile: args['--entry-file']
-      ? ensurePathIsAbsolute(args['--entry-file'])
-      : resolveEntryPoint(projectRoot, { platform }),
+    entryFile:
+      ensurePathIsAbsolute(args['--entry-file']) ?? resolveEntryPoint(projectRoot, { platform }),
     assetCatalogDest: ensurePathIsAbsolute(args['--asset-catalog-dest']),
     platform,
     transformer: args['--transformer'],
